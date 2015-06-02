@@ -73,6 +73,19 @@ class SimpleExample {
 haxelib install extension-multiads
 ```
 
+###How to Choose the Ad Network
+
+To build using AdMob (the default)
+```bash
+lime test android
+lime test ios
+```
+
+To build using Amazon Ads
+```bash
+lime test android -Damazon
+```
+
 ###License
 
 The MIT License (MIT) - [LICENSE.md](LICENSE.md)
