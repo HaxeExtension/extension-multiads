@@ -1,6 +1,6 @@
 {
         "name": "extension-multiads",
-        "url": "https://github.com/fbricker/extension-multiads",
+        "url": "https://github.com/sempaigames/extension-multiads",
         "license": "MIT",
         "contributors":["fbricker"],
         "tags": ["ads","extension","lime","openfl","android","ios","amazon","admob","amazonads"],
