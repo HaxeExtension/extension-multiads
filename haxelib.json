@@ -5,6 +5,6 @@
         "contributors":["fbricker"],
         "tags": ["ads","extension","lime","openfl","android","ios","amazon","admob","amazonads"],
         "description": "OpenFL / Lime extension to manage multiple ad networks using a single API.",
-        "version": "1.0.0",
-        "releasenote": "Initial commit."
+        "version": "1.0.1",
+        "releasenote": "Use renamed extension-amazonads."
 }

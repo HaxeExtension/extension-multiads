@@ -1,8 +1,8 @@
 package extension.multiads;
 
 #if amazon
-import com.pozirk.ads.AmazonAds;
-import com.pozirk.ads.AmazonAdsEvent;
+import extension.amazonads.AmazonAds;
+import extension.amazonads.AmazonAdsEvent;
 #else
 import extension.admob.AdMob;
 import extension.admob.GravityMode;

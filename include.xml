@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension>
 	<haxelib name="openfl-admob" unless="amazon" />
-	<haxelib name="amazonads-openfl" if="amazon" />
+	<haxelib name="extension-amazonads" if="amazon" />
 </extension>
