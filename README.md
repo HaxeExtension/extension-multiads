@@ -10,7 +10,7 @@ A minimalistic OpenFL / Lime extension to manage multiple ad networks using a si
 ###Simple use Example
 
 ```haxe
-// This example show a simple sharing of a text using the Share Class.
+// This example show a simple example.
 
 import extension.multiads.Ads;
 
