@@ -1,4 +1,4 @@
-#extension-webview
+#extension-multiads
 
 A minimalistic OpenFL / Lime extension to manage multiple ad networks using a single API.
 
