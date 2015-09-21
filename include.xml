@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension>
-	<haxelib name="openfl-admob" unless="amazon" />
-	<haxelib name="extension-amazonads" if="amazon" />
+	<set name="admob" unless="fbads || amazon" />
+	<set name="amazonads" if="amazon" unless="fbads" />
+	<haxedef name="admob" if="admob" />
+	<haxedef name="amazonads" if="amazonads" />
+	<haxedef name="fbads" if="fbads" />
+
+	<haxelib name="extension-facebookads" if="fbads" />
+	<haxelib name="openfl-admob" if="admob" />
+	<haxelib name="extension-amazonads" if="amazonads" />
 </extension>

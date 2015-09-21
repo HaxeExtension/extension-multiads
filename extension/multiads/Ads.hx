@@ -1,9 +1,11 @@
 package extension.multiads;
 
-#if amazon
+#if fbads
+import extension.facebookads.FacebookAds;
+#elseif amazonads
 import extension.amazonads.AmazonAds;
 import extension.amazonads.AmazonAdsEvent;
-#else
+#elseif admob
 import extension.admob.AdMob;
 import extension.admob.GravityMode;
 #end
@@ -14,7 +16,7 @@ class Ads {
 	private static var testingAds:Bool = false;
 	private static var initialized:Bool = false;
 
-	#if amazon
+	#if amazonads
 	private static var displayingBanner:Bool = false;
 	private static var _amazonAds:AmazonAds = null;
 	private static var valign:String = VALIGN_BOTTOM;
@@ -39,15 +41,23 @@ class Ads {
 			return;
 		}
 		testingAds = true;
-		#if !amazon
-		AdMob.enableTestingAds();
+		#if amazonads
+			trace("enabling testing ads for Amazon");
+		#elseif admob
+			AdMob.enableTestingAds();
+			trace("enabling testing ads for AdMob");
+		#elseif fbads
+			FacebookAds.enableTestingAds();
+			trace("enabling testing ads for Facebook");
+		#else
+			trulala;
 		#end
 	}
 
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function initAndroidAdMob (bannerID:String, interstitialID:String, verticalAlign:String) {
-		#if !amazon
+		#if admob
 		initialized = true;
 		AdMob.initAndroid(bannerID, interstitialID, (verticalAlign==VALIGN_TOP)?GravityMode.TOP:GravityMode.BOTTOM);
 		#end
@@ -56,7 +66,7 @@ class Ads {
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function initIOSAdMob (bannerID:String, interstitialID:String, verticalAlign:String) {
-		#if !amazon
+		#if admob
 		initialized = true;
 		AdMob.initIOS(bannerID, interstitialID, (verticalAlign==VALIGN_TOP)?GravityMode.TOP:GravityMode.BOTTOM);
 		#end
@@ -64,8 +74,17 @@ class Ads {
 
 	////////////////////////////////////////////////////////////////////////////
 
+	public static function initFacebookAds (bannerID:String, interstitialID:String, verticalAlign:String) {
+		#if fbads
+		initialized = true;
+		FacebookAds.init(bannerID, interstitialID, (verticalAlign==VALIGN_TOP));
+		#end
+	}
+
+	////////////////////////////////////////////////////////////////////////////
+
 	public static function initAmazonAds (appID:String, verticalAlign:String, maxHeight:Float=0) {
-		#if amazon
+		#if amazonads
 		initialized = true;		
 		Ads.valign = verticalAlign;
 		_amazonAds = new AmazonAds();
@@ -81,35 +100,43 @@ class Ads {
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function showBanner () {
-		#if amazon
-		if(displayingBanner) return;
-		displayingBanner = true;
-		_amazonAds.showAd(AmazonAds.SIZE_AUTO, AmazonAds.HALIGN_CENTER, (Ads.valign==VALIGN_TOP)?AmazonAds.VALIGN_TOP:AmazonAds.VALIGN_BOTTOM);
-		#else
-		AdMob.showBanner();
+		#if amazonads
+			if(displayingBanner) return;
+			displayingBanner = true;
+			_amazonAds.showAd(AmazonAds.SIZE_AUTO, AmazonAds.HALIGN_CENTER, (Ads.valign==VALIGN_TOP)?AmazonAds.VALIGN_TOP:AmazonAds.VALIGN_BOTTOM);
+		#elseif admob
+			AdMob.showBanner();
+		#elseif fbads
+			FacebookAds.showBanner();
 		#end
 	}
 
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function hideBanner () {
-		#if amazon
-		_amazonAds.hideAd();
-		displayingBanner = false;
-		#else
-		AdMob.hideBanner();
-		#end		
+		#if amazonads
+			_amazonAds.hideAd();
+			displayingBanner = false;
+		#elseif admob
+			AdMob.hideBanner();
+		#elseif fbads
+			FacebookAds.hideBanner();
+		#end
 	}
 
 	////////////////////////////////////////////////////////////////////////////
 
-	private static function __showInterstitial () {
-		#if amazon
-		_amazonAds.showInterstitial();
-		_amazonAds.cacheInterstitial();
-		#else
-		AdMob.showInterstitial(0,0);
+	private static function __showInterstitial ():Bool {
+		#if amazonads
+			var res:Bool = _amazonAds.showInterstitial();
+			_amazonAds.cacheInterstitial();
+			return res;
+		#elseif admob
+			return AdMob.showInterstitial(0,0);
+		#elseif fbads
+			return FacebookAds.showInterstitial(0,0);
 		#end
+		return false;
 	}
 
 	private static var lastTimeInterstitial:Int = -60*1000;
@@ -117,13 +144,14 @@ class Ads {
 	
 	////////////////////////////////////////////////////////////////////////////
 
-	public static function showInterstitial(minInterval:Int=60, minCallsBeforeDisplay:Int=0) {
+	public static function showInterstitial(minInterval:Int=60, minCallsBeforeDisplay:Int=0):Bool {
 		displayCallsCounter++;
-		if( (openfl.Lib.getTimer()-lastTimeInterstitial)<(minInterval*1000) ) return;
-		if( minCallsBeforeDisplay > displayCallsCounter ) return;
+		if( (openfl.Lib.getTimer()-lastTimeInterstitial)<(minInterval*1000) ) return false;
+		if( minCallsBeforeDisplay > displayCallsCounter ) return false;
+		if(!__showInterstitial()) return false;
 		displayCallsCounter = 0;
 		lastTimeInterstitial = openfl.Lib.getTimer();
-		__showInterstitial();
+		return true;
 	}
 
 	////////////////////////////////////////////////////////////////////////////
