@@ -6,7 +6,7 @@
         "tags": ["ads","extension","lime","openfl","android","ios","amazon","admob","amazonads"],
         "description": "OpenFL / Lime extension to manage multiple ad networks using a single API.",
         "dependencies": {
-            "openfl-admob": "",
+            "extension-admob": "",
             "extension-amazonads": "",
             "extension-facebookads": ""
         },
