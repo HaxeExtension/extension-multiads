@@ -7,6 +7,6 @@
 	<haxedef name="fbads" if="fbads" />
 
 	<haxelib name="extension-facebookads" if="fbads" />
-	<haxelib name="openfl-admob" if="admob" />
+	<haxelib name="extension-admob" if="admob" />
 	<haxelib name="extension-amazonads" if="amazonads" />
 </extension>
