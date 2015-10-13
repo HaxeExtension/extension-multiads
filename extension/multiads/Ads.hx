@@ -11,6 +11,8 @@ import extension.amazonads.AmazonAdsEvent;
 import extension.admob.AdMob;
 import extension.admob.GravityMode;
 #end
+import haxe.Http;
+import openfl.net.SharedObject;
 
 class Ads {
 	public static inline var VALIGN_TOP:String = 'TOP';
@@ -32,6 +34,79 @@ class Ads {
 
 	////////////////////////////////////////////////////////////////////////////
 	
+	private static function saveMediationData(data:String){
+		try{
+			var ld:SharedObject=SharedObject.getLocal('extension-multiads');
+			ld.data.mediationOrder = data;
+			ld.flush();			
+		}catch( e:Dynamic ){
+			trace("ERROR: Could not save mediation order!");
+		}
+	}
+
+	private static function getSavedMediationData():String{
+		try{
+			var ld:SharedObject=SharedObject.getLocal('extension-multiads');
+			if(ld.data==null) return null;
+			if(ld.data.mediationOrder == null) return null;
+			return ld.data.mediationOrder;
+		}catch( e:Dynamic ){
+			trace("ERROR: Could not load mediation order!");
+		}
+		return null;
+	}
+
+	private static function loadMediationOrderFromString(data:String):Bool{
+		try{
+			if(data==null) return false;
+			var order:Array<Int> = haxe.Json.parse(data);
+			setMediationOrder(order);
+			return true;
+		} catch ( e:Dynamic ) {
+			trace("ERROR: Could not parse mediation order!");
+		}
+		return false;
+	}
+
+	////////////////////////////////////////////////////////////////////////////
+
+	public static function loadMediationOrder(url:String, defaultOrder:Array<Int>){
+		var request : Http = new Http(url);
+		#if (neko||php||cpp||cs||java)
+			request.cnxTimeout=5;
+		#end
+
+		var oldMediationData = getSavedMediationData();
+		if(!loadMediationOrderFromString(oldMediationData)){
+			trace("Can't load last mediation order: Using default Mediation Order.");
+			setMediationOrder(defaultOrder);			
+		}
+		trace(mediationOrder);
+
+		request.onError = function(e){
+			trace("loadMediationOrder error!");
+			trace(e);
+		};
+		request.onData = function(data:String){
+			try{
+				if(data == oldMediationData){
+					trace("Received unchanged mediation order: "+data);
+					return;
+				}
+				if(loadMediationOrderFromString(data)) {					
+					trace("Received mediation order: "+data);
+					trace(mediationOrder);
+					saveMediationData(data);
+				}
+			}catch(e:Dynamic){
+				trace("loadMediationOrder Error: "+e);
+			}
+		};
+
+		request.request(false);
+
+	}
+
 	public static function setMediationOrder(order:Array<Int>){
 		mediationOrder = [];
 		for(network in order){
