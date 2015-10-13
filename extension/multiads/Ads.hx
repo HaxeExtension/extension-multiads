@@ -2,10 +2,12 @@ package extension.multiads;
 
 #if fbads
 import extension.facebookads.FacebookAds;
-#elseif amazonads
+#end
+#if amazonads
 import extension.amazonads.AmazonAds;
 import extension.amazonads.AmazonAdsEvent;
-#elseif admob
+#end
+#if admob
 import extension.admob.AdMob;
 import extension.admob.GravityMode;
 #end
@@ -13,8 +15,14 @@ import extension.admob.GravityMode;
 class Ads {
 	public static inline var VALIGN_TOP:String = 'TOP';
 	public static inline var VALIGN_BOTTOM:String = 'BOTTOM';
+
+	public static inline var NETWORK_ADMOB:Int = 1;
+	public static inline var NETWORK_AMAZON:Int = 2;
+	public static inline var NETWORK_FACEBOOK:Int = 3;
+
 	private static var testingAds:Bool = false;
 	private static var initialized:Bool = false;
+	private static var mediationOrder:Array<Int> = [];
 
 	#if amazonads
 	private static var displayingBanner:Bool = false;
@@ -24,6 +32,21 @@ class Ads {
 
 	////////////////////////////////////////////////////////////////////////////
 	
+	public static function setMediationOrder(order:Array<Int>){
+		mediationOrder = [];
+		for(network in order){
+			#if amazonads
+				if(network == NETWORK_AMAZON) mediationOrder.push(network);
+			#end
+			#if admob
+				if(network == NETWORK_ADMOB) mediationOrder.push(network);
+			#end
+			#if fbads
+				if(network == NETWORK_FACEBOOK) mediationOrder.push(network);
+			#end
+		}
+	}
+
 	public static function autoEnableTestingAds () {
 		#if testingAds
 		enableTestingAds();
@@ -43,21 +66,22 @@ class Ads {
 		testingAds = true;
 		#if amazonads
 			trace("enabling testing ads for Amazon");
-		#elseif admob
+		#end
+		#if admob
 			AdMob.enableTestingAds();
 			trace("enabling testing ads for AdMob");
-		#elseif fbads
+		#end
+		#if fbads
 			FacebookAds.enableTestingAds();
 			trace("enabling testing ads for Facebook");
-		#else
-			trulala;
 		#end
 	}
 
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function initAndroidAdMob (bannerID:String, interstitialID:String, verticalAlign:String) {
-		#if admob
+		#if (admob && android)
+		mediationOrder.push(NETWORK_ADMOB);
 		initialized = true;
 		AdMob.initAndroid(bannerID, interstitialID, (verticalAlign==VALIGN_TOP)?GravityMode.TOP:GravityMode.BOTTOM);
 		#end
@@ -66,7 +90,8 @@ class Ads {
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function initIOSAdMob (bannerID:String, interstitialID:String, verticalAlign:String) {
-		#if admob
+		#if (admob && ios)
+		mediationOrder.push(NETWORK_ADMOB);
 		initialized = true;
 		AdMob.initIOS(bannerID, interstitialID, (verticalAlign==VALIGN_TOP)?GravityMode.TOP:GravityMode.BOTTOM);
 		#end
@@ -76,6 +101,7 @@ class Ads {
 
 	public static function initFacebookAds (bannerID:String, interstitialID:String, verticalAlign:String) {
 		#if fbads
+		mediationOrder.push(NETWORK_FACEBOOK);
 		initialized = true;
 		FacebookAds.init(bannerID, interstitialID, (verticalAlign==VALIGN_TOP));
 		#end
@@ -85,6 +111,7 @@ class Ads {
 
 	public static function initAmazonAds (appID:String, verticalAlign:String, maxHeight:Float=0) {
 		#if amazonads
+		mediationOrder.push(NETWORK_AMAZON);
 		initialized = true;		
 		Ads.valign = verticalAlign;
 		_amazonAds = new AmazonAds();
@@ -100,41 +127,57 @@ class Ads {
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function showBanner () {
+		if(mediationOrder.length == 0) return;
+		var network:Int = mediationOrder[0];
 		#if amazonads
-			if(displayingBanner) return;
-			displayingBanner = true;
-			_amazonAds.showAd(AmazonAds.SIZE_AUTO, AmazonAds.HALIGN_CENTER, (Ads.valign==VALIGN_TOP)?AmazonAds.VALIGN_TOP:AmazonAds.VALIGN_BOTTOM);
-		#elseif admob
-			AdMob.showBanner();
-		#elseif fbads
-			FacebookAds.showBanner();
+			if(network == NETWORK_AMAZON){
+				if(displayingBanner) return;
+				displayingBanner = true;
+				_amazonAds.showAd(AmazonAds.SIZE_AUTO, AmazonAds.HALIGN_CENTER, (Ads.valign==VALIGN_TOP)?AmazonAds.VALIGN_TOP:AmazonAds.VALIGN_BOTTOM);
+			}
+		#end
+		#if admob
+			if(network == NETWORK_ADMOB) AdMob.showBanner();
+		#end
+		#if fbads
+			if(network == NETWORK_FACEBOOK) FacebookAds.showBanner();
 		#end
 	}
 
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function hideBanner () {
+		if(mediationOrder.length == 0) return;
+		var network:Int = mediationOrder[0];
 		#if amazonads
-			_amazonAds.hideAd();
-			displayingBanner = false;
-		#elseif admob
-			AdMob.hideBanner();
-		#elseif fbads
-			FacebookAds.hideBanner();
+			if(network == NETWORK_AMAZON){
+				_amazonAds.hideAd();
+				displayingBanner = false;
+			}
+		#end
+		#if admob
+			if(network == NETWORK_ADMOB) AdMob.hideBanner();
+		#end
+		#if fbads
+			if(network == NETWORK_FACEBOOK) FacebookAds.hideBanner();
 		#end
 	}
 
 	////////////////////////////////////////////////////////////////////////////
 
-	private static function __showInterstitial ():Bool {
+	private static function __showInterstitial (network:Int):Bool {
 		#if amazonads
-			var res:Bool = _amazonAds.showInterstitial();
-			_amazonAds.cacheInterstitial();
-			return res;
-		#elseif admob
-			return AdMob.showInterstitial(0,0);
-		#elseif fbads
-			return FacebookAds.showInterstitial(0,0);
+			if(network == NETWORK_AMAZON){
+				var res:Bool = _amazonAds.showInterstitial();
+				_amazonAds.cacheInterstitial();
+				return res;			
+			}
+		#end
+		#if admob
+			if(network == NETWORK_ADMOB) return AdMob.showInterstitial(0,0);
+		#end
+		#if fbads
+			if(network == NETWORK_FACEBOOK) return FacebookAds.showInterstitial(0,0);
 		#end
 		return false;
 	}
@@ -148,10 +191,14 @@ class Ads {
 		displayCallsCounter++;
 		if( (openfl.Lib.getTimer()-lastTimeInterstitial)<(minInterval*1000) ) return false;
 		if( minCallsBeforeDisplay > displayCallsCounter ) return false;
-		if(!__showInterstitial()) return false;
-		displayCallsCounter = 0;
-		lastTimeInterstitial = openfl.Lib.getTimer();
-		return true;
+		for(network in mediationOrder){
+			if(__showInterstitial(network)){
+				displayCallsCounter = 0;
+				lastTimeInterstitial = openfl.Lib.getTimer();
+				return true;
+			}
+		}
+		return false;
 	}
 
 	////////////////////////////////////////////////////////////////////////////
