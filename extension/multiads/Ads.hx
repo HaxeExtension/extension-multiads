@@ -35,6 +35,7 @@ class Ads {
 	public static function setMediationOrder(order:Array<Int>){
 		mediationOrder = [];
 		for(network in order){
+			if(mediationOrder.indexOf(network)!=-1) continue;
 			#if amazonads
 				if(network == NETWORK_AMAZON) mediationOrder.push(network);
 			#end
@@ -46,6 +47,8 @@ class Ads {
 			#end
 		}
 	}
+
+	////////////////////////////////////////////////////////////////////////////	
 
 	public static function autoEnableTestingAds () {
 		#if testingAds
