@@ -18,6 +18,7 @@ class Ads {
 	public static inline var VALIGN_TOP:String = 'TOP';
 	public static inline var VALIGN_BOTTOM:String = 'BOTTOM';
 
+	public static inline var NETWORK_NONE:Int = 0;
 	public static inline var NETWORK_ADMOB:Int = 1;
 	public static inline var NETWORK_AMAZON:Int = 2;
 	public static inline var NETWORK_FACEBOOK:Int = 3;
@@ -112,13 +113,13 @@ class Ads {
 		for(network in order){
 			if(mediationOrder.indexOf(network)!=-1) continue;
 			#if amazonads
-				if(network == NETWORK_AMAZON) mediationOrder.push(network);
+				if(Math.abs(network) == NETWORK_AMAZON) mediationOrder.push(network);
 			#end
 			#if admob
-				if(network == NETWORK_ADMOB) mediationOrder.push(network);
+				if(Math.abs(network) == NETWORK_ADMOB) mediationOrder.push(network);
 			#end
 			#if fbads
-				if(network == NETWORK_FACEBOOK) mediationOrder.push(network);
+				if(Math.abs(network) == NETWORK_FACEBOOK) mediationOrder.push(network);
 			#end
 		}
 	}
@@ -204,9 +205,17 @@ class Ads {
 
 	////////////////////////////////////////////////////////////////////////////
 
-	public static function showBanner () {
-		if(mediationOrder.length == 0) return;
+	private static function getBannerNetwork():Int{
+		if(mediationOrder.length == 0) return NETWORK_NONE;
 		var network:Int = mediationOrder[0];
+		if(network<0) network*=-1;
+		return network;
+	}
+
+	public static function showBanner () {
+		var network = getBannerNetwork();
+		if(network == NETWORK_NONE) return;
+		if(network<0) network*=-1;
 		#if amazonads
 			if(network == NETWORK_AMAZON){
 				if(displayingBanner) return;
@@ -225,19 +234,15 @@ class Ads {
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function hideBanner () {
-		if(mediationOrder.length == 0) return;
-		var network:Int = mediationOrder[0];
 		#if amazonads
-			if(network == NETWORK_AMAZON){
-				_amazonAds.hideAd();
-				displayingBanner = false;
-			}
+			_amazonAds.hideAd();
+			displayingBanner = false;
 		#end
 		#if admob
-			if(network == NETWORK_ADMOB) AdMob.hideBanner();
+			AdMob.hideBanner();
 		#end
 		#if fbads
-			if(network == NETWORK_FACEBOOK) FacebookAds.hideBanner();
+			FacebookAds.hideBanner();
 		#end
 	}
 
