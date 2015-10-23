@@ -26,12 +26,21 @@ class Ads {
 	private static var testingAds:Bool = false;
 	private static var initialized:Bool = false;
 	private static var mediationOrder:Array<Int> = [];
+	private static var disabled:Bool = false;
 
 	#if amazonads
 	private static var displayingBanner:Bool = false;
 	private static var _amazonAds:AmazonAds = null;
 	private static var valign:String = VALIGN_BOTTOM;
 	#end
+
+	////////////////////////////////////////////////////////////////////////////
+
+	public static function disable(){
+		trace("Disabling ads!");
+		hideBanner();
+		disabled = true;
+	}
 
 	////////////////////////////////////////////////////////////////////////////
 	
@@ -72,6 +81,8 @@ class Ads {
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function loadMediationOrder(url:String, defaultOrder:Array<Int>){
+		if(disabled) return;
+
 		var request : Http = new Http(url);
 		#if (neko||php||cpp||cs||java)
 			request.cnxTimeout=5;
@@ -109,6 +120,8 @@ class Ads {
 	}
 
 	public static function setMediationOrder(order:Array<Int>){
+		if(disabled) return;
+
 		mediationOrder = [];
 		for(network in order){
 			if(mediationOrder.indexOf(network)!=-1) continue;
@@ -133,6 +146,8 @@ class Ads {
 	}
 
 	public static function enableTestingAds() {
+		if(disabled) return;
+
 		if ( testingAds ) return;
 		if ( initialized ) {
 			var msg:String;
@@ -160,6 +175,7 @@ class Ads {
 
 	public static function initAndroidAdMob (bannerID:String, interstitialID:String, verticalAlign:String) {
 		#if (admob && android)
+		if(disabled) return;
 		mediationOrder.push(NETWORK_ADMOB);
 		initialized = true;
 		AdMob.initAndroid(bannerID, interstitialID, (verticalAlign==VALIGN_TOP)?GravityMode.TOP:GravityMode.BOTTOM);
@@ -170,6 +186,7 @@ class Ads {
 
 	public static function initIOSAdMob (bannerID:String, interstitialID:String, verticalAlign:String) {
 		#if (admob && ios)
+		if(disabled) return;
 		mediationOrder.push(NETWORK_ADMOB);
 		initialized = true;
 		AdMob.initIOS(bannerID, interstitialID, (verticalAlign==VALIGN_TOP)?GravityMode.TOP:GravityMode.BOTTOM);
@@ -180,6 +197,7 @@ class Ads {
 
 	public static function initFacebookAds (bannerID:String, interstitialID:String, verticalAlign:String) {
 		#if fbads
+		if(disabled) return;
 		mediationOrder.push(NETWORK_FACEBOOK);
 		initialized = true;
 		FacebookAds.init(bannerID, interstitialID, (verticalAlign==VALIGN_TOP));
@@ -190,6 +208,7 @@ class Ads {
 
 	public static function initAmazonAds (appID:String, verticalAlign:String, maxHeight:Float=0) {
 		#if amazonads
+		if(disabled) return;
 		mediationOrder.push(NETWORK_AMAZON);
 		initialized = true;		
 		Ads.valign = verticalAlign;
@@ -213,6 +232,8 @@ class Ads {
 	}
 
 	public static function showBanner () {
+		if(disabled) return;
+
 		var network = getBannerNetwork();
 		if(network == NETWORK_NONE) return;
 		if(network<0) network*=-1;
@@ -234,6 +255,8 @@ class Ads {
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function hideBanner () {
+		if(disabled) return;
+
 		#if amazonads
 			_amazonAds.hideAd();
 			displayingBanner = false;
@@ -271,6 +294,8 @@ class Ads {
 	////////////////////////////////////////////////////////////////////////////
 
 	public static function showInterstitial(minInterval:Int=60, minCallsBeforeDisplay:Int=0):Bool {
+		if(disabled) return false;
+
 		displayCallsCounter++;
 		if( (openfl.Lib.getTimer()-lastTimeInterstitial)<(minInterval*1000) ) return false;
 		if( minCallsBeforeDisplay > displayCallsCounter ) return false;
