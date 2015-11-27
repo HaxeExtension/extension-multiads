@@ -83,11 +83,6 @@ class Ads {
 	public static function loadMediationOrder(url:String, defaultOrder:Array<Int>){
 		if(disabled) return;
 
-		var request : Http = new Http(url);
-		#if (neko||php||cpp||cs||java)
-			request.cnxTimeout=5;
-		#end
-
 		var oldMediationData = getSavedMediationData();
 		if(!loadMediationOrderFromString(oldMediationData)){
 			trace("Can't load last mediation order: Using default Mediation Order.");
@@ -95,28 +90,25 @@ class Ads {
 		}
 		trace(mediationOrder);
 
-		request.onError = function(e){
-			trace("loadMediationOrder error!");
-			trace(e);
-		};
-		request.onData = function(data:String){
-			try{
-				if(data == oldMediationData){
-					trace("Received unchanged mediation order: "+data);
-					return;
+		#if cpp
+			var thread = cpp.vm.Thread.create(function(){
+				try{
+					var data:String = Http.requestUrl(url);
+					if(data == oldMediationData){
+						trace("Received unchanged mediation order: "+data);
+						return;
+					}
+					if(loadMediationOrderFromString(data)) {					
+						trace("Received mediation order: "+data);
+						trace(mediationOrder);
+						saveMediationData(data);
+					}
+				}catch(e:Dynamic){
+					trace("loadMediationOrder error!");
+					trace(e);
 				}
-				if(loadMediationOrderFromString(data)) {					
-					trace("Received mediation order: "+data);
-					trace(mediationOrder);
-					saveMediationData(data);
-				}
-			}catch(e:Dynamic){
-				trace("loadMediationOrder Error: "+e);
-			}
-		};
-
-		request.request(false);
-
+			});
+		#end
 	}
 
 	public static function setMediationOrder(order:Array<Int>){

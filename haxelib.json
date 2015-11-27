@@ -10,6 +10,6 @@
             "extension-amazonads": "",
             "extension-facebookads": ""
         },
-        "version": "1.2.1",
-        "releasenote": "Add disable method to entirely disable ads on runtime."
+        "version": "1.2.2",
+        "releasenote": "Make HTTP requests to run in blocking mode, but on a separate thread."
 }
