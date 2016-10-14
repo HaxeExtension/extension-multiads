@@ -11,7 +11,8 @@ import extension.amazonads.AmazonAdsEvent;
 import extension.admob.AdMob;
 import extension.admob.GravityMode;
 #end
-import haxe.Http;
+import httpSocket.Http;
+import httpSocket.ThreadedHttp;
 import openfl.net.SharedObject;
 
 class Ads {
@@ -90,25 +91,29 @@ class Ads {
 		}
 		trace(mediationOrder);
 
-		#if cpp
-			var thread = cpp.vm.Thread.create(function(){
+		ThreadedHttp.requestUrl(url,
+			function(http:Http, msg:String){
 				try{
-					var data:String = Http.requestUrl(url);
+					var data = http.data.toString();				
 					if(data == oldMediationData){
-						trace("Received unchanged mediation order: "+data);
+						trace("Got the same mediation order: "+data);
 						return;
 					}
 					if(loadMediationOrderFromString(data)) {					
-						trace("Received mediation order: "+data);
+						trace("Got new mediation order: "+data);
 						trace(mediationOrder);
 						saveMediationData(data);
 					}
 				}catch(e:Dynamic){
 					trace("loadMediationOrder error!");
 					trace(e);
-				}
-			});
-		#end
+				}				
+			},
+			function(http:Http, msg:String){
+				trace("loadMediationOrder error!");
+				trace(msg);
+			}
+		);
 	}
 
 	public static function setMediationOrder(order:Array<Int>){
