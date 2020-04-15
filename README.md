@@ -1,13 +1,13 @@
-#extension-multiads
+# extension-multiads
 
 A minimalistic OpenFL / Lime extension to manage multiple ad networks using a single API.
 
-###Currently supports
+### Currently supports
 
 * AdMob (Android & iOS)
 * Amazon (Android only)
 
-###Simple use Example
+### Simple use Example
 
 ```haxe
 // This example show a simple example.
@@ -67,13 +67,13 @@ class SimpleExample {
 
 ```
 
-###How to Install
+### How to Install
 
 ```bash
 haxelib install extension-multiads
 ```
 
-###How to Choose the Ad Network
+### How to Choose the Ad Network
 
 To build using AdMob (the default)
 ```bash
@@ -86,7 +86,7 @@ To build using Amazon Ads
 lime test android -Damazon
 ```
 
-###License
+### License
 
 The MIT License (MIT) - [LICENSE.md](LICENSE.md)
 
